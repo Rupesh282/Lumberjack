@@ -63,6 +63,7 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 				{
 					chain.emplace_back(min_dist_tree);
 					chain_maker(min_dist_tree, Direction::down, chain, trees);
+					break;
 				}
 			}	
 		}
@@ -94,6 +95,7 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 				{
 					chain.emplace_back(min_dist_tree);
 					chain_maker(min_dist_tree, Direction::left, chain, trees);
+					break;
 				}
 			}
 		}
@@ -117,12 +119,6 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 				}
 			}
 		}
-		if ((foundTree) && min_dist_tree->x - tree->x < tree->h && tree->weight()>min_dist_tree->weight())
-		{
-			chain.emplace_back(min_dist_tree);
-			chain_maker(min_dist_tree, Direction::right, chain, trees);
-		}
-		break;
 		if ((foundTree))
 		{
 			for (auto it : chain)
@@ -131,6 +127,7 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 				{
 					chain.emplace_back(min_dist_tree);
 					chain_maker(min_dist_tree, Direction::right, chain, trees);
+					break;
 				}
 			}
 		}
@@ -162,6 +159,7 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 				{
 					chain.emplace_back(min_dist_tree);
 					chain_maker(min_dist_tree, Direction::up, chain, trees);
+					break;
 				}
 			}
 		}
