@@ -6,6 +6,7 @@
 #include <climits>
 #include <cstdlib>
 #include <array>
+#include <algorithm>
 
 using namespace std;
 
@@ -13,6 +14,7 @@ class Tree
 {
 public:
 	int x, y, h, d, c, p;
+	int key;
 	int price()
 	{
 		return p*h*d;
@@ -21,7 +23,16 @@ public:
 	{
 		return c*h*d;
 	}
+
 };
+
+bool operator==(Tree t1, Tree t2)
+{
+	if (t1.key == t2.key)
+		return true;
+	else
+		return false;
+}
 
 enum class Direction
 {
@@ -33,7 +44,7 @@ enum class Direction
 
 const array<Direction, 4> all_directions = { Direction::down, Direction::up, Direction::left, Direction::right};
 
-void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::iterator> &chain,vector<Tree> *trees)
+void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::iterator>* chain,vector<Tree> *trees)
 {
 	switch (d)
 	{
@@ -57,11 +68,11 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 		}
 		if ((foundTree))
 		{
-			for (auto it : chain)
+			for (auto it : *chain)
 			{
 				if (it->y - min_dist_tree->y < it->h && it->weight()>min_dist_tree->weight())
 				{
-					chain.emplace_back(min_dist_tree);
+					chain->emplace_back(min_dist_tree);
 					chain_maker(min_dist_tree, Direction::down, chain, trees);
 					break;
 				}
@@ -89,11 +100,11 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 		}
 		if ((foundTree))
 		{
-			for (auto it : chain)
+			for (auto it : *chain)
 			{
 				if (it->x - min_dist_tree->x < it->h && it->weight()>min_dist_tree->weight())
 				{
-					chain.emplace_back(min_dist_tree);
+					chain->emplace_back(min_dist_tree);
 					chain_maker(min_dist_tree, Direction::left, chain, trees);
 					break;
 				}
@@ -121,11 +132,11 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 		}
 		if ((foundTree))
 		{
-			for (auto it : chain)
+			for (auto it : *chain)
 			{
 				if (min_dist_tree->x - it->x < it->h && it->weight()>min_dist_tree->weight())
 				{
-					chain.emplace_back(min_dist_tree);
+					chain->emplace_back(min_dist_tree);
 					chain_maker(min_dist_tree, Direction::right, chain, trees);
 					break;
 				}
@@ -153,11 +164,11 @@ void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::
 		}
 		if ((foundTree))
 		{
-			for (auto it : chain)
+			for (auto it : *chain)
 			{
 				if (min_dist_tree->y - it->y < it->h && it->weight()>min_dist_tree->weight())
 				{
-					chain.emplace_back(min_dist_tree);
+					chain->emplace_back(min_dist_tree);
 					chain_maker(min_dist_tree, Direction::up, chain, trees);
 					break;
 				}
@@ -180,6 +191,7 @@ int main()
 	{
 		Tree temp;
 		cin >> temp.x >> temp.y >> temp.h >> temp.d >> temp.c >> temp.p;
+		temp.key = i;
 		trees->emplace_back(temp);
 	}
 	//End of input
@@ -205,12 +217,13 @@ int main()
 		for (Direction d : all_directions)
 		{
 			vector<vector<Tree>::iterator> temp_chain;
-			chain_maker(least_dist_tree, d, temp_chain, trees);
-			if (!temp_chain.empty())
+			temp_chain.emplace_back(least_dist_tree);
+			chain_maker(least_dist_tree, d, &temp_chain, trees);
+			if (temp_chain.size()>1)
 			{
 				isChain = 1;
 				int temp_price(0);
-				for (auto it : chain)
+				for (auto it : temp_chain)
 					temp_price += it->price();
 				if (chain_max_price < temp_price)
 				{
@@ -273,12 +286,22 @@ int main()
 			}
 			curr_coor.first = least_dist_tree->x;
 			curr_coor.second = least_dist_tree->y;
-			trees->erase(least_dist_tree);
+			//trees->erase(least_dist_trees
+			
 			if (isChain)
 			{
+				vector<Tree> trees_chain;
 				for (auto it : chain)
-					trees->erase(it);
+				{
+					trees_chain.emplace_back(*it);
+				}
+				for (Tree t : trees_chain)
+				{
+					trees->erase(remove(trees->begin(), trees->end(), t), trees->end());
+				}
 			}
+			else
+				trees->erase(least_dist_tree);
 			time -= temp_time;
 		}
 		else
