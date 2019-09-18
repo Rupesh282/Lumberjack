@@ -222,27 +222,79 @@ int main()
 	pair<int,int> curr_coor(0,0); //first is x, second is y
 	while (time > 0 && !trees->empty())
 	{
-		vector<Tree>::iterator least_dist_tree;
-		int least_dist = INT_MAX;
+		/*int least_dist = INT_MAX;
 		for (auto it = trees->begin(); it != trees->end(); it++)
 		{
 			int dist = abs(curr_coor.first - it->x) + abs(curr_coor.second - it->y);
 			if (dist < least_dist)
 			{
 				least_dist = dist;
-				least_dist_tree = it;
+				max_profit_tree = it;
 			}
-		}
-		Direction chain_dir = Direction::up;
+		}*/
+
+		vector<Tree>::iterator max_profit_tree=trees->begin();
+		int max_profit(0);
+		int temp_time(abs(curr_coor.first - trees->begin()->x) + abs(curr_coor.second - trees->begin()->y) + trees->begin()->d);
+		double max_ratio(0);
 		bool isChain(0);
-		int chain_max_price(0);
+		Direction chain_dir = Direction::up;
 		vector<vector<Tree>::iterator> chain;
+		for (auto it = trees->begin(); it != trees->end(); it++)
+		{
+			int temp_time_local = abs(curr_coor.first - it->x) + abs(curr_coor.second - it->y) + it->d;
+			if (temp_time_local > time)
+				continue;
+			int profit;
+			int chain_max_price(0);
+			bool isChainLocal(0);
+			Direction chain_dir_local;
+			vector<vector<Tree>::iterator> chain_local;
+			for (Direction d : all_directions)
+			{
+				vector<vector<Tree>::iterator> temp_chain;
+				temp_chain.emplace_back(it);
+				chain_maker(it, d, &temp_chain, trees);
+				if (temp_chain.size() > 1)
+				{
+					isChainLocal = 1;
+					int temp_price(0);
+					for (auto it : temp_chain)
+						temp_price += it->price();
+					if (chain_max_price < temp_price)
+					{
+						chain_max_price = temp_price;
+						chain_local = temp_chain;
+						chain_dir_local = d;
+					}
+				}
+			}
+			if (isChainLocal)
+				profit = chain_max_price;
+			else
+				profit = it->price();
+			//temp_time_local+= abs(curr_coor.first - it->x) + abs(curr_coor.second - it->y);
+			//temp_time_local += it->d;
+			double ratio = static_cast<double>(profit) / temp_time_local;
+			if (temp_time_local<=time && ratio > max_ratio)
+			{
+				max_ratio = ratio;
+				max_profit = profit;
+				max_profit_tree = it;
+				isChain = isChainLocal;
+				chain_dir = chain_dir_local;
+				chain = chain_local;
+				temp_time = temp_time_local;
+			}
+
+		}
+		/*
 		//check for domino effect
 		for (Direction d : all_directions)
 		{
 			vector<vector<Tree>::iterator> temp_chain;
-			temp_chain.emplace_back(least_dist_tree);
-			chain_maker(least_dist_tree, d, &temp_chain, trees);
+			temp_chain.emplace_back(max_profit_tree);
+			chain_maker(max_profit_tree, d, &temp_chain, trees);
 			if (temp_chain.size()>1)
 			{
 				isChain = 1;
@@ -256,38 +308,38 @@ int main()
 					chain_dir = d;
 				}
 			}
-		}
+		}*/
 		//Calculate time 
-		int temp_time(0);
-		temp_time += least_dist;
-		temp_time += least_dist_tree->d;
+	
+		//temp_time += abs(curr_coor.first-max_profit_tree->x)+abs(curr_coor.second-max_profit_tree->y);
+		//temp_time += max_profit_tree->d;
 		if (temp_time < time)
 		{
 			//go to the tree
-			if (curr_coor.first < least_dist_tree->x)
+			if (curr_coor.first < max_profit_tree->x)
 			{
-				for (int i = 0; i < least_dist_tree->x - curr_coor.first; i++)
+				for (int i = 0; i < max_profit_tree->x - curr_coor.first; i++)
 				{
 					cout << "move right\n";
 				}
 			}
 			else
 			{
-				for (int i = 0; i < curr_coor.first - least_dist_tree->x; i++)
+				for (int i = 0; i < curr_coor.first - max_profit_tree->x; i++)
 				{
 					cout << "move left\n";
 				}
 			}
-			if (curr_coor.second < least_dist_tree->y)
+			if (curr_coor.second < max_profit_tree->y)
 			{
-				for (int i = 0; i < least_dist_tree->y - curr_coor.second; i++)
+				for (int i = 0; i < max_profit_tree->y - curr_coor.second; i++)
 				{
 					cout << "move up\n";
 				}
 			}
 			else
 			{
-				for (int i = 0; i < curr_coor.second - least_dist_tree->y; i++)
+				for (int i = 0; i < curr_coor.second - max_profit_tree->y; i++)
 				{
 					cout << "move down\n";
 				}
@@ -308,9 +360,9 @@ int main()
 				cout << "cut right\n";
 				break;
 			}
-			curr_coor.first = least_dist_tree->x;
-			curr_coor.second = least_dist_tree->y;
-			//trees->erase(least_dist_trees
+			curr_coor.first = max_profit_tree->x;
+			curr_coor.second = max_profit_tree->y;
+			//trees->erase(max_profit_trees
 			
 			if (isChain)
 			{
@@ -325,7 +377,7 @@ int main()
 				}
 			}
 			else
-				trees->erase(least_dist_tree);
+				trees->erase(max_profit_tree);
 			time -= temp_time;
 		}
 		else
