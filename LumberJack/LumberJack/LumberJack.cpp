@@ -1,355 +1,281 @@
-
-#include "pch.h"
-#include <iostream>
-#include <vector>
-#include <utility>
-#include <climits>
-#include <cstdlib>
-#include <array>
-#include <algorithm>
+#include"pch.h"
+#include<iostream>
+#include<unordered_map>
+#include<vector>
+#include<array>
+#include<utility>
+#include<cstdlib>
+#include<algorithm>
 
 using namespace std;
+
+enum class Direction
+{
+	up,
+	right,
+	down,
+	left
+};
 
 class Tree
 {
 public:
+	Tree(int xp,int yp,int hp,int dp,int cp,int pp):x(xp),y(yp),h(hp),d(dp),c(cp),p(pp)
+	{}
+	Tree() {}
 	int x, y, h, d, c, p;
-	int key;
 	int price()
 	{
-		return p*h*d;
+		return p * h * d;
 	}
 	int weight()
 	{
-		return c*h*d;
+		return c * h * d;
 	}
-
+	array<vector<int>, 4> chains;
+	vector<Direction> possible_directions;
 };
 
-bool operator==(Tree t1, Tree t2)
+class Point
 {
-	if (t1.key == t2.key)
-		return true;
-	else
-		return false;
-}
-
-enum class Direction
-{
-	left,
-	right,
-	up,
-	down
+public:
+	//int x, y;
+	bool existsTree=0;
+	int tree_key;
 };
 
-const array<Direction, 4> all_directions = { Direction::down, Direction::up, Direction::left, Direction::right};
+unordered_map<int, Tree> trees;
 
-void chain_maker(vector<Tree>::iterator tree, Direction d, vector<vector<Tree>::iterator>* chain,vector<Tree> *trees)
+const array<Direction, 4> all_directions{Direction::up,Direction::right,Direction::down,Direction::left};
+
+void chain_maker(int tree_key, Direction d, vector<int>* chain,Point** points, int grid_size)
 {
 	switch (d)
 	{
-	case Direction::down:
+	case Direction::up:
 	{
-		int min_dist = INT_MAX;
-		vector<Tree>::iterator min_dist_tree;
-		bool foundTree(0);
-		for(auto it = trees->begin(); it != trees->end(); it++)
+		Tree t = trees[tree_key];
+		t.h--;
+		int x = t.x, y = t.y+1;
+		while (t.h > 0 && y<grid_size)
 		{
-			if (it->y < tree->y && it->x == tree->x)
+			if (points[x][y].existsTree)
 			{
-				foundTree = 1;
-				int dist = tree->y - it->y;
-				if (dist < min_dist)
+				if (trees[points[x][y].tree_key].weight() < trees[tree_key].weight())
 				{
-					min_dist = dist;
-					min_dist_tree = it;
+					chain->emplace_back(points[x][y].tree_key);
+					chain_maker(points[x][y].tree_key, d, chain, points,grid_size);
 				}
+				break;
 			}
-		}
-		if ((foundTree))
-		{
-			/*for (auto it : *chain)
-			{
-				if (it->y - min_dist_tree->y < it->h && it->weight()>min_dist_tree->weight())
-				{
-					chain->emplace_back(min_dist_tree);
-					chain_maker(min_dist_tree, Direction::down, chain, trees);
-					break;
-				}
-			}	*/
-			auto it = chain->back();
-			if (it->y - min_dist_tree->y < it->h && it->weight()>min_dist_tree->weight())
-			{
-				chain->emplace_back(min_dist_tree);
-				chain_maker(min_dist_tree, Direction::down, chain, trees);
-			}
-		}
-		break;
-	}
-	case Direction::left:
-	{
-		int min_dist = INT_MAX;
-		vector<Tree>::iterator min_dist_tree;
-		bool foundTree(0);
-		for (auto it = trees->begin(); it != trees->end(); it++)
-		{
-			if (it->x < tree->x && it->y == tree->y)
-			{
-				foundTree = 1;
-				int dist = tree->x - it->x;
-				if (dist < min_dist)
-				{
-					min_dist = dist;
-					min_dist_tree = it;
-				}
-			}
-		}
-		if ((foundTree))
-		{
-			/*for (auto it : *chain)
-			{
-				if (it->x - min_dist_tree->x < it->h && it->weight()>min_dist_tree->weight())
-				{
-					chain->emplace_back(min_dist_tree);
-					chain_maker(min_dist_tree, Direction::left, chain, trees);
-					break;
-				}
-			}*/
-			auto it = chain->back();
-			if (it->x - min_dist_tree->x < it->h && it->weight()>min_dist_tree->weight())
-			{
-				chain->emplace_back(min_dist_tree);
-				chain_maker(min_dist_tree, Direction::left, chain, trees);
-			}
+			t.h--;
+			y++;
 		}
 		break;
 	}
 	case Direction::right:
 	{
-		int min_dist = INT_MAX;
-		vector<Tree>::iterator min_dist_tree;
-		bool foundTree(0);
-		for (auto it = trees->begin(); it != trees->end(); it++)
+		Tree t = trees[tree_key];
+		t.h--;
+		int x = t.x + 1, y = t.y;
+		while (t.h > 0 && x < grid_size)
 		{
-			if (it->x > tree->x && it->y == tree->y)
+			if (points[x][y].existsTree)
 			{
-				foundTree = 1;
-				int dist = it->x - tree->x;
-				if (dist < min_dist)
+				if (trees[points[x][y].tree_key].weight() < trees[tree_key].weight())
 				{
-					min_dist = dist;
-					min_dist_tree = it;
+					chain->emplace_back(points[x][y].tree_key);
+					chain_maker(points[x][y].tree_key, d, chain, points, grid_size);
 				}
+				break;
 			}
-		}
-		if ((foundTree))
-		{
-			/*for (auto it : *chain)
-			{
-				if (min_dist_tree->x - it->x < it->h && it->weight()>min_dist_tree->weight())
-				{
-					chain->emplace_back(min_dist_tree);
-					chain_maker(min_dist_tree, Direction::right, chain, trees);
-					break;
-				}
-			}*/
-			auto it = chain->back();
-			if (min_dist_tree->x - it->x < it->h && it->weight()>min_dist_tree->weight())
-			{
-				chain->emplace_back(min_dist_tree);
-				chain_maker(min_dist_tree, Direction::right, chain, trees);
-			}
+			t.h--;
+			x++;
 		}
 		break;
 	}
-	case Direction::up:
+	case Direction::down:
 	{
-		int min_dist = INT_MAX;
-		vector<Tree>::iterator min_dist_tree;
-		bool foundTree(0);
-		for (auto it = trees->begin(); it != trees->end(); it++)
+		Tree t = trees[tree_key];
+		t.h--;
+		int x = t.x, y = t.y - 1;
+		while (t.h > 0 && y >= 0)
 		{
-			if (it->y > tree->y && it->x == tree->x)
+			if (points[x][y].existsTree)
 			{
-				foundTree = 1;
-				int dist = it->y - tree->y;
-				if (dist < min_dist)
+				if (trees[points[x][y].tree_key].weight() < trees[tree_key].weight())
 				{
-					min_dist = dist;
-					min_dist_tree = it;
+					chain->emplace_back(points[x][y].tree_key);
+					chain_maker(points[x][y].tree_key, d, chain, points, grid_size);
 				}
+				break;
 			}
+			t.h--;
+			y--;
 		}
-		if ((foundTree))
+		break;
+	}
+	case Direction::left:
+	{
+		Tree t = trees[tree_key];
+		t.h--;
+		int x = t.x-1, y = t.y;
+		while (t.h > 0 && x >= 0)
 		{
-			/*for (auto it : *chain)
+			if (points[x][y].existsTree)
 			{
-				if (min_dist_tree->y - it->y < it->h && it->weight()>min_dist_tree->weight())
+				if (trees[points[x][y].tree_key].weight() < trees[tree_key].weight())
 				{
-					chain->emplace_back(min_dist_tree);
-					chain_maker(min_dist_tree, Direction::up, chain, trees);
-					break;
+					chain->emplace_back(points[x][y].tree_key);
+					chain_maker(points[x][y].tree_key, d, chain, points, grid_size);
 				}
-			}*/
-			auto it = chain->back();
-			if (min_dist_tree->y - it->y < it->h && it->weight()>min_dist_tree->weight())
-			{
-				chain->emplace_back(min_dist_tree);
-				chain_maker(min_dist_tree, Direction::up, chain, trees);
+				break;
 			}
+			t.h--;
+			x--;
 		}
 		break;
 	}
 	}
 }
 
-int main()
+void delete_chain(vector<int> chain, Point** points, int grid_size)
 {
-	//Code for input
-	int time;
-	int grid_size;
-	int tree_nos;
-	cin >> time >> grid_size >> tree_nos;
-	vector<Tree> *trees = new vector<Tree>;
-	for (int i = 0; i < tree_nos; i++)
+	for (auto vec_it = chain.begin(); vec_it != chain.end(); vec_it++)
 	{
-		Tree temp;
-		cin >> temp.x >> temp.y >> temp.h >> temp.d >> temp.c >> temp.p;
-		temp.key = i;
-		trees->emplace_back(temp);
+		points[trees[*vec_it].x][trees[*vec_it].y].existsTree = 0;
 	}
-	//End of input
-	pair<int,int> curr_coor(0,0); //first is x, second is y
-	while (time > 0 && !trees->empty())
+	for (auto map_it = trees.begin(); map_it != trees.end(); map_it++)
 	{
-		/*int least_dist = INT_MAX;
-		for (auto it = trees->begin(); it != trees->end(); it++)
+		for (auto vec_it = chain.begin(); vec_it != chain.end(); vec_it++)
 		{
-			int dist = abs(curr_coor.first - it->x) + abs(curr_coor.second - it->y);
-			if (dist < least_dist)
+			if (map_it->first != *vec_it)
 			{
-				least_dist = dist;
-				max_profit_tree = it;
-			}
-		}*/
-
-		vector<Tree>::iterator max_profit_tree=trees->begin();
-		int max_profit(0);
-		int temp_time(abs(curr_coor.first - trees->begin()->x) + abs(curr_coor.second - trees->begin()->y) + trees->begin()->d);
-		double max_ratio(0);
-		bool isChain(0);
-		Direction chain_dir = Direction::up;
-		vector<vector<Tree>::iterator> chain;
-		for (auto it = trees->begin(); it != trees->end(); it++)
-		{
-			int temp_time_local = abs(curr_coor.first - it->x) + abs(curr_coor.second - it->y) + it->d;
-			if (temp_time_local > time)
-				continue;
-			int profit;
-			int chain_max_price(0);
-			bool isChainLocal(0);
-			Direction chain_dir_local;
-			vector<vector<Tree>::iterator> chain_local;
-			for (Direction d : all_directions)
-			{
-				vector<vector<Tree>::iterator> temp_chain;
-				temp_chain.emplace_back(it);
-				chain_maker(it, d, &temp_chain, trees);
-				if (temp_chain.size() > 1)
+				for (Direction d : all_directions)
 				{
-					isChainLocal = 1;
-					int temp_price(0);
-					for (auto it : temp_chain)
-						temp_price += it->price();
-					if (chain_max_price < temp_price)
+					if (find(map_it->second.chains[static_cast<int>(d)].begin(), map_it->second.chains[static_cast<int>(d)].end(), *vec_it) !=
+						map_it->second.chains[static_cast<int>(d)].end())
 					{
-						chain_max_price = temp_price;
-						chain_local = temp_chain;
-						chain_dir_local = d;
+						map_it->second.chains[static_cast<int>(d)].clear();
+						map_it->second.chains[static_cast<int>(d)].emplace_back(map_it->first);
+						chain_maker(map_it->first, d, &(map_it->second.chains[static_cast<int>(d)]), points, grid_size);
 					}
 				}
 			}
-			if (isChainLocal)
-				profit = chain_max_price;
-			else
-				profit = it->price();
-			//temp_time_local+= abs(curr_coor.first - it->x) + abs(curr_coor.second - it->y);
-			//temp_time_local += it->d;
-			double ratio = static_cast<double>(profit) / temp_time_local;
-			if (temp_time_local<=time && ratio > max_ratio)
+		}
+	}
+	for (auto vec_it = chain.begin(); vec_it != chain.end(); vec_it++)
+	{
+		trees.erase(*vec_it);
+	}
+}
+
+void get_possible_directions(Tree &t,int grid_size)
+{
+	if (t.x != grid_size - 1)
+		t.possible_directions.emplace_back(Direction::right);
+	if (t.x != 0)
+		t.possible_directions.emplace_back(Direction::left);
+	if (t.y != grid_size - 1)
+		t.possible_directions.emplace_back(Direction::up);
+	if (t.y != 0)
+		t.possible_directions.emplace_back(Direction::down);
+}
+
+int main()
+{
+	int time, grid_size, no_of_trees;
+	cin >> time >> grid_size >> no_of_trees;
+	Point** points = new Point*[grid_size];
+	for (int i = 0; i < grid_size; i++)
+		points[i] = new Point[grid_size];
+	for (int i = 0; i < no_of_trees; i++)
+	{
+		int x, y, h, d, c, p;
+		cin >> x >> y >> h >> d >> c >> p;
+		trees[i] = Tree(x, y, h, d, c, p);
+		points[x][y].existsTree = 1;
+		points[x][y].tree_key = i;
+	}
+	int curr_x(0), curr_y(0);
+	for (int i = 0; i < no_of_trees; i++)
+	{
+		get_possible_directions(trees[i],grid_size);
+		for (Direction d : trees[i].possible_directions)
+		{
+			trees[i].chains[static_cast<int>(d)].emplace_back(i);
+			chain_maker(i, d, &(trees[i].chains[static_cast<int>(d)]), points, grid_size);
+		}
+	}
+	while (time > 0 && !trees.empty())
+	{
+		double max_ratio=0;
+		bool isSet(0);
+		int max_ratio_tree_key;
+		int temp_time;
+		//bool isChain;
+		//int total_profit;
+		Direction chain_dir;
+		vector<int> chain;
+		for (auto it = trees.begin(); it != trees.end(); it++)
+		{
+			int temp_time_local=abs(curr_x-it->second.x)+abs(curr_y-it->second.y)+it->second.d;
+			if (temp_time_local > time)
+				continue;
+			double ratio;
+			Direction chain_dir_local;
+			int profit = 0;
+			vector<int> chain_local;
+			for (Direction d : it->second.possible_directions)
 			{
+				int profit_local = 0;
+				for (auto vec_it = it->second.chains[static_cast<int>(d)].begin(); vec_it != it->second.chains[static_cast<int>(d)].end(); vec_it++)
+				{
+					profit_local += trees[*vec_it].price();
+				}
+				if (profit_local > profit)
+				{
+					profit = profit_local;
+					chain_dir_local = d;
+					chain_local = (it->second.chains[static_cast<int>(d)]);
+				}
+			}
+			ratio = static_cast<double>(profit) / temp_time_local;
+			if (ratio > max_ratio)
+			{
+				isSet = 1;
 				max_ratio = ratio;
-				max_profit = profit;
-				max_profit_tree = it;
-				isChain = isChainLocal;
+				max_ratio_tree_key = it->first;
+				temp_time  = temp_time_local;
+				//total_profit = profit;
 				chain_dir = chain_dir_local;
 				chain = chain_local;
-				temp_time = temp_time_local;
 			}
-
 		}
-		/*
-		//check for domino effect
-		for (Direction d : all_directions)
+		if (isSet)
 		{
-			vector<vector<Tree>::iterator> temp_chain;
-			temp_chain.emplace_back(max_profit_tree);
-			chain_maker(max_profit_tree, d, &temp_chain, trees);
-			if (temp_chain.size()>1)
+			if (curr_x < trees[max_ratio_tree_key].x)
 			{
-				isChain = 1;
-				int temp_price(0);
-				for (auto it : temp_chain)
-					temp_price += it->price();
-				if (chain_max_price < temp_price)
-				{
-					chain_max_price = temp_price;
-					chain = temp_chain;
-					chain_dir = d;
-				}
-			}
-		}*/
-		//Calculate time 
-	
-		//temp_time += abs(curr_coor.first-max_profit_tree->x)+abs(curr_coor.second-max_profit_tree->y);
-		//temp_time += max_profit_tree->d;
-		if (temp_time < time)
-		{
-			//go to the tree
-			if (curr_coor.first < max_profit_tree->x)
-			{
-				for (int i = 0; i < max_profit_tree->x - curr_coor.first; i++)
-				{
+				for (int i = 0; i < trees[max_ratio_tree_key].x - curr_x; i++)
 					cout << "move right\n";
-				}
 			}
 			else
 			{
-				for (int i = 0; i < curr_coor.first - max_profit_tree->x; i++)
-				{
+				for (int i = 0; i < curr_x - trees[max_ratio_tree_key].x; i++)
 					cout << "move left\n";
-				}
 			}
-			if (curr_coor.second < max_profit_tree->y)
+			if (curr_y < trees[max_ratio_tree_key].y)
 			{
-				for (int i = 0; i < max_profit_tree->y - curr_coor.second; i++)
-				{
+				for (int i = 0; i < trees[max_ratio_tree_key].y-curr_y; i++)
 					cout << "move up\n";
-				}
 			}
 			else
 			{
-				for (int i = 0; i < curr_coor.second - max_profit_tree->y; i++)
-				{
+				for (int i = 0; i < curr_y-trees[max_ratio_tree_key].y; i++)
 					cout << "move down\n";
-				}
 			}
-			//cut the tree
 			switch (chain_dir)
 			{
-			case Direction::up:
-				cout << "cut up\n";
-				break;
 			case Direction::down:
 				cout << "cut down\n";
 				break;
@@ -359,31 +285,16 @@ int main()
 			case Direction::right:
 				cout << "cut right\n";
 				break;
+			case Direction::up:
+				cout << "cut up\n";
+				break;
 			}
-			curr_coor.first = max_profit_tree->x;
-			curr_coor.second = max_profit_tree->y;
-			//trees->erase(max_profit_trees
+			curr_x = trees[max_ratio_tree_key].x;
+			curr_y = trees[max_ratio_tree_key].y;
+			delete_chain(chain, points, grid_size);
 			
-			if (isChain)
-			{
-				vector<Tree> trees_chain;
-				for (auto it : chain)
-				{
-					trees_chain.emplace_back(*it);
-				}
-				for (Tree t : trees_chain)
-				{
-					trees->erase(remove(trees->begin(), trees->end(), t), trees->end());
-				}
-			}
-			else
-				trees->erase(max_profit_tree);
-			time -= temp_time;
 		}
-		else
-			return 0;
+		time -= temp_time;
 	}
 	return 0;
 }
-
-
