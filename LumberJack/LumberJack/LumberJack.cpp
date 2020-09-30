@@ -30,7 +30,7 @@ public:
 	}
 	int weight()
 	{
-		return c * h * d;
+		return c * d * h;
 	}
 	array<vector<int>, 4> chains;
 	vector<Direction> possible_directions;
